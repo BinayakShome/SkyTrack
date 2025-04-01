@@ -13,6 +13,7 @@ val airlineCodes = mapOf(
     "SEJ" to "SG",  //SPICEJET
     "AXB" to "IX", //AIR INDIA EXPRESS
     "BDA" to "BLUE DART",
-    "BOE" to "BOEING"
+    "BOE" to "BOEING",
+    "AKJ" to "QP" //AKASA
     // Add more airline codes here
 )
