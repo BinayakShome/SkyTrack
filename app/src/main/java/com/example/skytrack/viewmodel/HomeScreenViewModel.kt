@@ -1,24 +1,20 @@
 package com.example.skytrack.viewmodel
 
-import android.app.Application
 import android.content.Context
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.skytrack.api.apiKey
 import com.example.skytrack.data.AircraftState
-import com.example.skytrack.data.FlightData
-import com.example.skytrack.data.NetworkUtils
 import com.example.skytrack.data.NetworkUtils.isInternetAvailable
+import com.example.skytrack.data.airlineCodes
 import com.example.skytrack.retro.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class HomeScreenViewModel : ViewModel() {
-    private val _flights = MutableStateFlow<List<AircraftState>>(emptyList()) // Use StateFlow
-    val flights: StateFlow<List<AircraftState>> = _flights // Expose as a StateFlow
+    private val _flights = MutableStateFlow<List<AircraftState>>(emptyList()) // Original list of flights
+    val flights: StateFlow<List<AircraftState>> = _flights // Exposed flights
 
     private val _showNoInternet = MutableStateFlow(false)
     val showNoInternet: StateFlow<Boolean> = _showNoInternet
@@ -26,8 +22,29 @@ class HomeScreenViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    private val _searchQuery = MutableStateFlow("") // StateFlow for search query
+    val searchQuery: StateFlow<String> = _searchQuery
+
+    // Function to update the search query
+    fun onSearchQueryChanged(query: String) {
+        _searchQuery.value = query
+        filterFlights(query)
+    }
+
+    // Function to filter flights based on the search query
+    private fun filterFlights(query: String) {
+        // Filter the list of flights based on the search query (callsign or city)
+        _flights.value = _flights.value.filter { flight ->
+            val queryLowerCase = query.lowercase()
+
+            // Check if the query matches the flight number (callsign) or city (origin_country)
+            flight.callsign?.lowercase()?.contains(queryLowerCase) == true ||
+                    flight.origin_country.lowercase().contains(queryLowerCase)
+        }
+    }
+
+    // Other functions like checking internet availability and fetching flights
     fun checkInternetAvailability(context: Context) {
-        // Check internet availability and update showNoInternet
         val isConnected = isInternetAvailable(context)
         _showNoInternet.value = !isConnected
     }
@@ -35,13 +52,10 @@ class HomeScreenViewModel : ViewModel() {
     fun fetchFlights() {
         viewModelScope.launch {
             try {
-                _isLoading.value = true  // Start loading
-
                 val response = RetrofitInstance.api.getAllAircraftStates()
                 if (response != null) {
-                    // Map the response to AircraftState objects and filter out domestic flights
                     val aircraftStates = response.states.mapNotNull { state ->
-                        val aircraftState = AircraftState(
+                        AircraftState(
                             icao24 = state[0] as String,
                             callsign = state[1] as? String,
                             origin_country = state[2] as String,
@@ -55,35 +69,30 @@ class HomeScreenViewModel : ViewModel() {
                             heading = state[10] as? Double,
                             vertical_rate = state[11] as? Double
                         )
-
-                        if (aircraftState.origin_country.trim() == "India" || aircraftState.callsign?.contains(
-                                "IGO",
-                                ignoreCase = true
-                            ) == true
-                        ) {
-                            Log.d(
-                                "FlightViewModel",
-                                "Domestic Indigo Flight: ${aircraftState.callsign}"
-                            )
-                            aircraftState // Only add it to the list if it's a domestic flight from India (Indigo)
-                        } else {
-                            null // Ignore international flights
-                        }
                     }
 
-                    // Log the number of filtered flights
-                    Log.d("FlightViewModel", "Filtered Domestic Flights: ${aircraftStates.size}")
-
-                    _flights.value = aircraftStates // Update the flights list with filtered flights
-                } else {
-                    Log.e("FlightViewModel", "Error: Null response")
+                    // Filter out non-Indian flights
+                    val domesticFlights = aircraftStates.filter {
+                        it.origin_country.trim() == "India"
+                    }
+                    _flights.value = domesticFlights // Set the filtered list
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                Log.e("FlightViewModel", "Exception: ${e.message}")
-            } finally {
-                _isLoading.value = false // End loading
             }
+        }
+    }
+    fun formatFlightCode(callsign: String?): String {
+        return if (!callsign.isNullOrEmpty() && callsign.length > 2) {
+            val iataCode = callsign.take(3).uppercase()  // Take first two chars as IATA code
+            val flightNumber = callsign.drop(3)  // Take the rest as flight number
+
+            val airlineName =
+                airlineCodes[iataCode] ?: "Unknown Airline" // Get airline name from map
+
+            "$airlineName $flightNumber"  // Format as "Air India 1382"
+        } else {
+            callsign ?: "Unknown"  // Return original callsign if it's invalid or empty
         }
     }
 }

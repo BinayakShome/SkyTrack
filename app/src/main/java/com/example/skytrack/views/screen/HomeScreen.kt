@@ -38,8 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.skytrack.data.AircraftState
-import com.example.skytrack.data.FlightData
-import com.example.skytrack.navigation.Screen
 import com.example.skytrack.viewmodel.HomeScreenViewModel
 import com.example.skytrack.views.components.NoInternet
 import com.google.firebase.auth.FirebaseAuth
@@ -54,8 +52,7 @@ fun HomeScreen(
     val showNoInternet by viewModel.showNoInternet.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val flights by viewModel.flights.collectAsState()
-//    val filteredFlights by viewModel.filteredFlights.collectAsState() // Collect filtered data
-//    val searchQuery by viewModel.searchQuery.collectAsState() // Collect search query from ViewModel
+    val searchQuery by viewModel.searchQuery.collectAsState() // Collect search query from ViewModel
 
     val firebaseUser = FirebaseAuth.getInstance().currentUser
     val userName = firebaseUser?.displayName
@@ -84,6 +81,7 @@ fun HomeScreen(
             )
         }
     ) { paddingValues ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -104,15 +102,14 @@ fun HomeScreen(
                             .fillMaxSize()
                             .padding(16.dp)
                     ) {
-                        // Search Input
-//                        OutlinedTextField(
-//                            value = searchQuery,
-//                            onValueChange = {
-//                                viewModel.onSearchQueryChanged(it) // Update search query in ViewModel
-//                            },
-//                            label = { Text("Search Flights") },
-//                            modifier = Modifier.fillMaxWidth()
-//                        )
+                        // Search bar for filtering by flight number or city
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { query -> viewModel.onSearchQueryChanged(query) },
+                            label = { Text("Search Flight or City") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
 
                         Spacer(modifier = Modifier.height(16.dp))
 
@@ -122,8 +119,10 @@ fun HomeScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(flights) { flight ->
-                                FlightCard(flight)
-                            }
+                                FlightCard(
+                                    flight,
+                                    formatFlightCode = { callsign -> viewModel.formatFlightCode(callsign) }
+                                )
                             }
                         }
                     }
@@ -131,26 +130,29 @@ fun HomeScreen(
             }
         }
     }
+}
 
 @Composable
-fun FlightCard(flight: AircraftState) {
+fun FlightCard(flight: AircraftState, formatFlightCode: (String?) -> String) {
+    val formattedFlightCode = formatFlightCode(flight.callsign)
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         elevation = CardDefaults.cardElevation(4.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "ICAO24: ${flight.icao24}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(text = "Callsign: ${flight.callsign ?: "6E"}", style = MaterialTheme.typography.bodyMedium)
+//            Text(
+//                text = "ICAO24: ${flight.icao24}",
+//                style = MaterialTheme.typography.titleMedium,
+//                fontWeight = FontWeight.Bold
+//            )
+            Text(text = "Flight Number: $formattedFlightCode", style = MaterialTheme.typography.bodyMedium)
             Text(text = "Country: ${flight.origin_country}", style = MaterialTheme.typography.bodyMedium)
             Text(text = "Latitude: ${flight.latitude}", style = MaterialTheme.typography.bodyMedium)
             Text(text = "Longitude: ${flight.longitude}", style = MaterialTheme.typography.bodyMedium)
             Text(text = "Altitude: ${flight.baro_altitude} meters", style = MaterialTheme.typography.bodyMedium)
-            Text(text = "Velocity: ${flight.velocity} m/s", style = MaterialTheme.typography.bodyMedium)
+            //Text(text = "Velocity: ${flight.velocity} m/s", style = MaterialTheme.typography.bodyMedium)
             Text(text = "Heading: ${flight.heading}°", style = MaterialTheme.typography.bodyMedium)
             Text(text = "On Ground: ${if (flight.on_ground) "Yes" else "No"}", style = MaterialTheme.typography.bodyMedium)
         }
