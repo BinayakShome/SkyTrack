@@ -2,7 +2,9 @@ package com.example.skytrack.navigation
 
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.example.skytrack.views.screen.HomeScreen
 
 fun NavGraphBuilder.mainNavGraph(
     navController: NavController
@@ -11,6 +13,10 @@ fun NavGraphBuilder.mainNavGraph(
         startDestination = Screen.HomeScreen.route,
         route = "main"
     ) {
+
+        composable(Screen.HomeScreen.route){
+            HomeScreen(navController = navController)
+        }
 //        composable(Screen.CurrentDayScreen.route) {
 //            val currentDayViewModel: CurrentDayViewModel = viewModel()
 //

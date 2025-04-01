@@ -10,7 +10,6 @@ import com.example.skytrack.views.screen.LoginScreen
 fun NavGraphBuilder.loginNavGraph(
     navController: NavController,
     loginViewModel: LoginViewModel,
-//    settingScreenViewModel: SettingScreenViewModel
 ) {
     navigation(
         startDestination = Screen.LoginScreen.route,
@@ -20,19 +19,10 @@ fun NavGraphBuilder.loginNavGraph(
             LoginScreen(
                 state = loginViewModel.signInResult,
                 onSignInSuccess = {
-                    navController.navigate("SetProfile") {
-                        popUpTo("login_graph") { inclusive = true }
-                    }
+                    navController.navigate("main")
                 },
                 loginViewModel = loginViewModel
             )
         }
-
-//        composable(Screen.SetProfile.route) {
-//            SetProfile(
-//                navController = navController,
-//                settingScreenViewModel = settingScreenViewModel
-//            )
-//        }
     }
 }

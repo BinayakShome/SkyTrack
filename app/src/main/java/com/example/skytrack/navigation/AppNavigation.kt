@@ -16,7 +16,6 @@ fun AppNavigation(
     navController: NavHostController = rememberNavController()
 ) {
     val loginViewModel: LoginViewModel = viewModel()
-//    val settingScreenViewModel: SettingScreenViewModel = viewModel()
     val isUserLoggedIn by rememberUpdatedState(Firebase.auth.currentUser != null)
     val startDestination = if (isUserLoggedIn) "main" else "login_graph"
 
