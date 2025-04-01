@@ -1,9 +1,11 @@
 package com.example.skytrack.navigation
 
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.example.skytrack.viewmodel.HomeScreenViewModel
 import com.example.skytrack.views.screen.HomeScreen
 
 fun NavGraphBuilder.mainNavGraph(
@@ -15,48 +17,10 @@ fun NavGraphBuilder.mainNavGraph(
     ) {
 
         composable(Screen.HomeScreen.route){
-            HomeScreen(navController = navController)
+            val homeScreenViewModel: HomeScreenViewModel = viewModel()
+
+            HomeScreen(navController = navController,
+                viewModel = homeScreenViewModel)
         }
-//        composable(Screen.CurrentDayScreen.route) {
-//            val currentDayViewModel: CurrentDayViewModel = viewModel()
-//
-//            CurrentDayScreen(
-//                navController = navController,
-//                viewModel = currentDayViewModel
-//            )
-//        }
-//
-//        composable(Screen.ProfileScreen.route) {
-//            val profileViewModel: ProfileViewModel = viewModel()
-//
-//            ProfileScreen(
-//                navController = navController,
-//                onLogOutClick = {
-//                    Firebase.auth.signOut()
-//                    navController.navigate("login_graph") {
-//                        popUpTo("main") { inclusive = true }
-//                    }
-//                },
-//                viewModel = profileViewModel
-//            )
-//        }
-//
-//        composable(Screen.WeekScreen.route) {
-//            val weekViewModel : WeekViewModel = viewModel()
-//
-//            WeekScreen(navController = navController,
-//                viewModel = weekViewModel)
-//        }
-//
-//        composable(Screen.HolidayListScreen.route) {
-//            HolidayListScreen(navController = navController)
-//        }
-//
-//        composable(Screen.SettingScreen.route) {
-//            val settingScreenViewModel: SettingScreenViewModel = viewModel()
-//
-//            SettingScreen(settingScreenViewModel = settingScreenViewModel,
-//                navController = navController)
-//        }
     }
 }
